@@ -1,24 +1,14 @@
 from django.contrib import admin
-from .models import Location, Category, Vendor, Model
+from .models import Brand, Car
 
-@admin.register(Location)
-class LocationAdmin(admin.ModelAdmin):
-    list_display = ("id", "name")
+@admin.register(Brand)
+class BrandAdmin(admin.ModelAdmin):
+    list_display = ("name", "country", "created_at")
     search_fields = ("name",)
 
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("id", "name")
-    search_fields = ("name",)
-
-@admin.register(Vendor)
-class VendorAdmin(admin.ModelAdmin):
-    list_display = ("id", "name")
-    search_fields = ("name",)
-
-@admin.register(Model)
-class ModelAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "vendor", "category")
-    list_filter = ("vendor", "category")
-    search_fields = ("name",)
-    autocomplete_fields = ("vendor", "category")
+@admin.register(Car)
+class CarAdmin(admin.ModelAdmin):
+    list_display = ("brand", "model", "year", "price", "status", "mileage")
+    list_filter = ("brand", "status", "fuel_type", "year")
+    search_fields = ("model", "vin")
+    list_editable = ("status",)
