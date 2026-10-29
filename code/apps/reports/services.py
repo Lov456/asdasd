@@ -1,18 +1,19 @@
-from django.db.models import Sum, Count
-from django.utils import timezone
 from datetime import timedelta
+from django.db.models import Count, Sum
+from django.utils import timezone
+from apps.catalog.models import Server
 from apps.orders.models import Order
-from apps.catalog.models import Car
+
 
 class ReportService:
-    """Сервис отчётов."""
-    
+    """Сервис аналитики серверной инфраструктуры."""
+
     @staticmethod
     def kpi(days: int = 30) -> dict:
-        """Главные KPI."""
+        """Ключевые показатели бизнеса."""
         since = timezone.now() - timedelta(days=days)
         completed = Order.objects.filter(
-            order_type=Order.OrderType.PURCHASE,
+            order_type=Order.OrderType.RENT,
             status=Order.Status.COMPLETED,
             created_at__gte=since,
         )
@@ -22,17 +23,17 @@ class ReportService:
             "revenue": float(revenue),
             "sales_count": count,
             "avg_check": float(revenue) / count if count else 0,
-            "in_stock": Car.objects.filter(status=Car.Status.AVAILABLE).count(),
+            "in_stock": Server.objects.filter(status=Server.Status.AVAILABLE).count(),
             "period_days": days,
         }
 
     @staticmethod
     def revenue_by_day(days: int = 30) -> list:
-        """Выручка по дням."""
+        """Динамика выручки по дням."""
         since = timezone.now() - timedelta(days=days)
         rows = (
             Order.objects.filter(
-                order_type=Order.OrderType.PURCHASE,
+                order_type=Order.OrderType.RENT,
                 status=Order.Status.COMPLETED,
                 created_at__gte=since,
             )
@@ -45,28 +46,28 @@ class ReportService:
 
     @staticmethod
     def top_models(limit: int = 5) -> list:
-        """Топ моделей."""
+        """Топ популярных тарифов / серверов."""
         rows = (
             Order.objects.filter(
-                order_type=Order.OrderType.PURCHASE,
+                order_type=Order.OrderType.RENT,
                 status=Order.Status.COMPLETED,
             )
-            .values("car__brand__name", "car__model")
+            .values("server__datacenter__name", "server__name")
             .annotate(count=Count("id"))
             .order_by("-count")[:limit]
         )
         return [
-            {"brand": r["car__brand__name"], "model": r["car__model"], "count": r["count"]}
+            {"brand": r["server__datacenter__name"], "model": r["server__name"], "count": r["count"]}
             for r in rows
         ]
 
     @staticmethod
     def manager_load(days: int = 30) -> list:
-        """Загрузка менеджеров."""
+        """Загрузка менеджеров по заключенным договорам."""
         since = timezone.now() - timedelta(days=days)
         rows = (
             Order.objects.filter(
-                order_type=Order.OrderType.PURCHASE,
+                order_type=Order.OrderType.RENT,
                 created_at__gte=since,
             )
             .values("manager__username")
@@ -79,8 +80,8 @@ class ReportService:
 
     @staticmethod
     def stock_status() -> list:
-        """Состояние склада."""
+        """Состояние серверного парка."""
         return [
             {"status": r["status"], "count": r["count"]}
-            for r in Car.objects.values("status").annotate(count=Count("id"))
+            for r in Server.objects.values("status").annotate(count=Count("id"))
         ]

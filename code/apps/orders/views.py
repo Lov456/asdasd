@@ -6,13 +6,14 @@ from rest_framework import filters
 from .models import Order
 from .serializers import OrderSerializer
 
+
 class OrderViewSet(viewsets.ModelViewSet):
-    """CRUD для заказов с экшенами complete / cancel."""
-    queryset = Order.objects.select_related("client", "car", "manager").all()
+    """CRUD для заказов."""
+    queryset = Order.objects.select_related("client", "server", "manager").all()
     serializer_class = OrderSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["status", "order_type", "manager"]
-    search_fields = ["client__full_name", "car__model"]
+    search_fields = ["client__full_name", "server__name", "server__ip_address"]
     ordering_fields = ["created_at", "total_amount"]
 
     def perform_create(self, serializer):

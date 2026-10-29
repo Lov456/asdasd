@@ -1,20 +1,25 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-class User(AbstractUser):
-    class Role(models.TextChoices):
-        ADMIN = "admin", "Администратор"
-        KEEPER = "keeper", "Кладовщик"
-        MOL = "mol", "МОЛ"
-        AUDITOR = "auditor", "Аудитор"
 
-    full_name = models.CharField("ФИО", max_length=255, blank=True)
-    role = models.CharField(
-        "Роль",
-        max_length=32,
-        choices=Role.choices,
-        default=Role.MOL,
+class User(AbstractUser):
+    """Кастомный пользователь (сотрудник хостинга)."""
+    class Position(models.TextChoices):
+        ADMIN = "admin", "Администратор"
+        MANAGER = "manager", "Менеджер по работе с клиентами"
+        ENGINEER = "engineer", "Сетевой инженер / DevOps"
+
+    phone = models.CharField("Телефон", max_length=20, blank=True)
+    position = models.CharField(
+        "Должность",
+        max_length=20,
+        choices=Position.choices,
+        default=Position.MANAGER,
     )
 
+    class Meta:
+        verbose_name = "Сотрудник"
+        verbose_name_plural = "Сотрудники"
+
     def __str__(self):
-        return self.full_name or self.username
+        return f"{self.get_full_name() or self.username} ({self.get_position_display()})"

@@ -1,68 +1,56 @@
 from django.db import models
-from django.urls import reverse
 
-class Brand(models.Model):
-    """Марка авто."""
-    name = models.CharField("Название", max_length=50, unique=True)
-    country = models.CharField("Страна", max_length=50, blank=True)
+
+class DataCenter(models.Model):
+    """Дата-центр / Локация размещения."""
+    name = models.CharField("Название ДЦ", max_length=100, unique=True)
+    country = models.CharField("Страна", max_length=50)
+    city = models.CharField("Город", max_length=50, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Марка"
-        verbose_name_plural = "Марки"
+        verbose_name = "Дата-центр"
+        verbose_name_plural = "Дата-центры"
         ordering = ["name"]
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.city or self.country})"
 
-class Car(models.Model):
-    """Автомобиль."""
+
+class Server(models.Model):
+    """Выделенный или виртуальный сервер."""
     class Status(models.TextChoices):
-        AVAILABLE = "available", "В наличии"
+        AVAILABLE = "available", "Свободен"
         RESERVED = "reserved", "Забронирован"
-        SOLD = "sold", "Продан"
+        RENTED = "rented", "Арендован"
+        MAINTENANCE = "maintenance", "Техобслуживание"
 
-    class FuelType(models.TextChoices):
-        PETROL = "petrol", "Бензин"
-        DIESEL = "diesel", "Дизель"
-        ELECTRIC = "electric", "Электро"
-        HYBRID = "hybrid", "Гибрид"
-
-    brand = models.ForeignKey(
-        Brand,
+    datacenter = models.ForeignKey(
+        DataCenter,
         on_delete=models.PROTECT,
-        related_name="cars",
-        verbose_name="Марка",
+        related_name="servers",
+        verbose_name="Дата-центр",
     )
-    model = models.CharField("Модель", max_length=100)
-    year = models.PositiveIntegerField("Год")
-    price = models.DecimalField("Цена, ₽", max_digits=12, decimal_places=2)
-    color = models.CharField("Цвет", max_length=50, blank=True)
-    engine_volume = models.DecimalField(
-        "Объем, л", max_digits=3, decimal_places=1, null=True, blank=True
-    )
-    fuel_type = models.CharField(
-        "Топливо", max_length=20, choices=FuelType.choices, default=FuelType.PETROL
-    )
-    transmission = models.CharField("КПП", max_length=20, blank=True)
-    mileage = models.PositiveIntegerField("Пробег, км", default=0)
+    name = models.CharField("Имя/Тариф", max_length=100)
+    cpu = models.CharField("Процессор", max_length=100)
+    ram = models.PositiveIntegerField("ОЗУ, ГБ")
+    storage = models.CharField("Накопители", max_length=100)
+    bandwidth = models.PositiveIntegerField("Канал, Мбит/с", default=1000)
+    ip_address = models.GenericIPAddressField("Выделенный IP", protocol="IPv4", unique=True, null=True, blank=True)
+    price = models.DecimalField("Аренда в мес., ₽", max_digits=12, decimal_places=2)
     status = models.CharField(
         "Статус", max_length=20, choices=Status.choices, default=Status.AVAILABLE
     )
-    vin = models.CharField("VIN", max_length=17, unique=True, blank=True, null=True)
-    description = models.TextField("Описание", blank=True)
+    description = models.TextField("Описание / Примечания", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Автомобиль"
-        verbose_name_plural = "Автомобили"
+        verbose_name = "Сервер"
+        verbose_name_plural = "Серверы"
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.brand.name} {self.model} ({self.year})"
-
-    def get_absolute_url(self):
-        return reverse("catalog:car_detail", args=[self.pk])
+        return f"{self.name} [{self.cpu} / {self.ram}GB RAM] ({self.datacenter.name})"
 
     @property
     def is_available(self):
