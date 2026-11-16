@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'verbose_name': 'Дата-центр',
-                'verbose_name_plural': 'Дата-центры',
+                'verbose_name_plural': 'Склады и помещения',
                 'ordering': ['name'],
             },
         ),
