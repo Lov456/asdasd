@@ -1,0 +1,24 @@
+# Виртуальное окружение
+.venv/
+venv/
+env/
+
+# Кэш Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# База данных и локальные настройки
+*.sqlite3
+db.sqlite3
+.env
+
+# Медиа и статические файлы
+/media/
+/staticfiles/
+
+# Настройки редакторов и ОС
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
